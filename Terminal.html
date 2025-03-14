@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Terminal</title>
+    <link rel="shortcut icon" href="terminal.png" type="image/png">
+    <style>
+        :root {
+            --bg-color: #000;
+            --text-color: #0f0;
+            --terminal-bg: #000;
+            --prompt-color: #0f0;
+            --output-color: #0f0;
+        }
+        
+        body {
+            font-family: "Courier New", Courier, monospace;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background: var(--bg-color);
+            color: var(--text-color);
+            justify-content: center;
+            align-items: center;
+        }
+        .terminal {
+            width: 80%;
+            height: 80%;
+            background: var(--terminal-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: var(--output-color);
+        }
+        .input-line {
+            display: flex;
+        }
+        .prompt {
+            color: var(--prompt-color);
+            margin-right: 5px;
+        }
+        .command-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-color);
+            font-family: "Courier New", Courier, monospace;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal" id="terminal">
+        <div class="output" id="output"></div>
+        <div class="input-line">
+            <span class="prompt">C:\Users\minus></span>
+            <input type="text" class="command-input" id="commandInput" autofocus>
+        </div>
+    </div>
+    <script>
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        document.getElementById("commandInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                processCommand();
+            }
+        });
+
+        document.getElementById("commandInput").addEventListener("keydown", function(event) {
+            if (event.key === "ArrowUp") {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    document.getElementById("commandInput").value = commandHistory[historyIndex];
+                }
+            } else if (event.key === "ArrowDown") {
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    document.getElementById("commandInput").value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    document.getElementById("commandInput").value = "";
+                }
+            }
+        });
+
+        function processCommand() {
+            let inputField = document.getElementById("commandInput");
+            let outputArea = document.getElementById("output");
+            let command = inputField.value.trim();
+            
+            commandHistory.push(command);
+            historyIndex = commandHistory.length;
+
+            if (command === "clear") {
+                outputArea.innerHTML = "";
+            } else {
+                let outputText = "Command not recognized: " + command;
+                if (command === "help") {
+                    outputText = "Available commands:\nhelp - Show available commands\nclear - Clear terminal\necho [text] - Print text\ntime - Show current time\ndate - Show current date\nhistory - Show command history\ncolor [color] - Change text color\nresetcolor - Reset text color to default";
+                } else if (command.startsWith("echo ")) {
+                    outputText = command.substring(5);
+                } else if (command === "time") {
+                    outputText = "Current Time: " + new Date().toLocaleTimeString();
+                } else if (command === "date") {
+                    outputText = "Current Date: " + new Date().toLocaleDateString();
+                } else if (command === "history") {
+                    outputText = commandHistory.join("\n");
+                } else if (command.startsWith("color ")) {
+                    let color = command.substring(6);
+                    document.documentElement.style.setProperty('--text-color', color);
+                    outputText = "Text color changed to " + color;
+                } else if (command === "resetcolor") {
+                    document.documentElement.style.setProperty('--text-color', '#0f0');
+                    outputText = "Text color reset to default";
+                }
+                
+                outputArea.innerHTML += "<div>C:\\Users\\minus> " + command + "</div><div>" + outputText + "</div>";
+            }
+            
+            inputField.value = "";
+            outputArea.scrollTop = outputArea.scrollHeight;
+        }
+    </script>
+</body>
+</html>
